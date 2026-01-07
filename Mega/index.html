@@ -1,92 +1,124 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>PickUP</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-  </head>
-  <body class="dark">
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas"></canvas>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>{{{ PRODUCT_NAME }}}</title>
+
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <link rel="stylesheet" href="TemplateData/style.css">
+
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
+
+    #unity-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #000;
+    }
+
+    #unity-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #000;
+    }
+  </style>
+</head>
+
+<body class="{{{ SPLASH_SCREEN_STYLE.toLowerCase() }}}">
+
+<div id="unity-container">
+  <canvas id="unity-canvas"></canvas>
+</div>
+
+<div id="loading-cover" style="display:none;">
+  <div id="unity-loading-bar">
+    <div id="unity-logo"><img src="logo.png"></div>
+    <div id="unity-progress-bar-empty">
+      <div id="unity-progress-bar-full"></div>
     </div>
-    <div id="loading-cover" style="display:none;">
-      <div id="unity-loading-bar">
-        <div id="unity-logo"><img src="logo.png"></div>
-        <div id="unity-progress-bar-empty" style="display: none;">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-        <div class="spinner"></div>
-      </div>
-    </div>
-    <div id="unity-fullscreen-button" style="display: none;"></div>
-    <script>
-      const hideFullScreenButton = "";
-      const buildUrl = "Build";
-      const loaderUrl = buildUrl + "/Mega.loader.js";
-      const config = {
-        dataUrl: buildUrl + "/Mega.data",
-        frameworkUrl: buildUrl + "/Mega.framework.js",
-        codeUrl: buildUrl + "/Mega.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "Krieger",
-        productName: "PickUP",
-        productVersion: "0.2",
-      };
+    <div class="spinner"></div>
+  </div>
+</div>
 
-      const container = document.querySelector("#unity-container");
-      const canvas = document.querySelector("#unity-canvas");
-      const loadingCover = document.querySelector("#loading-cover");
-      const progressBarEmpty = document.querySelector("#unity-progress-bar-empty");
-      const progressBarFull = document.querySelector("#unity-progress-bar-full");
-      const fullscreenButton = document.querySelector("#unity-fullscreen-button");
-      const spinner = document.querySelector('.spinner');
+<div id="unity-fullscreen-button" style="display:none;"></div>
 
-      const canFullscreen = (function() {
-        for (const key of [
-            'exitFullscreen',
-            'webkitExitFullscreen',
-            'webkitCancelFullScreen',
-            'mozCancelFullScreen',
-            'msExitFullscreen',
-          ]) {
-          if (key in document) {
-            return true;
-          }
-        }
-        return false;
-      }());
+<script>
+  /* ====== KONFIGURATION ====== */
+  const BUILD_WIDTH  = 1920;
+  const BUILD_HEIGHT = 1080;
 
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        container.className = "unity-mobile";
-        config.devicePixelRatio = 1;
-      }
-      loadingCover.style.display = "";
+  const buildUrl = "Build";
+  const loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
 
-      const script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          spinner.style.display = "none";
-          progressBarEmpty.style.display = "";
-          progressBarFull.style.width = `${100 * progress}%`;
-        }).then((unityInstance) => {
-          loadingCover.style.display = "none";
-          if (canFullscreen) {
-            if (!hideFullScreenButton) {
-              fullscreenButton.style.display = "";
-            }
-            fullscreenButton.onclick = () => {
-              unityInstance.SetFullscreen(1);
-            };
-          }
-        }).catch((message) => {
-          alert(message);
-        });
-      };
-      document.body.appendChild(script);
-    </script>
-  </body>
+  const config = {
+    dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+    frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+    codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+    streamingAssetsUrl: "StreamingAssets",
+    companyName: "{{{ COMPANY_NAME }}}",
+    productName: "{{{ PRODUCT_NAME }}}",
+    productVersion: "{{{ PRODUCT_VERSION }}}",
+  };
+
+  const container = document.getElementById("unity-container");
+  const canvas = document.getElementById("unity-canvas");
+  const loadingCover = document.getElementById("loading-cover");
+  const progressBarFull = document.getElementById("unity-progress-bar-full");
+  const fullscreenButton = document.getElementById("unity-fullscreen-button");
+
+  function resizeUnity() {
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    const aspect = BUILD_WIDTH / BUILD_HEIGHT;
+
+    let width = screenWidth;
+    let height = screenWidth / aspect;
+
+    if (height > screenHeight) {
+      height = screenHeight;
+      width = screenHeight * aspect;
+    }
+
+    container.style.width = width + "px";
+    container.style.height = height + "px";
+  }
+
+  window.addEventListener("resize", resizeUnity);
+  resizeUnity();
+
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    config.devicePixelRatio = Math.min(window.devicePixelRatio, 2);
+  }
+
+  loadingCover.style.display = "";
+
+  const script = document.createElement("script");
+  script.src = loaderUrl;
+  script.onload = () => {
+    createUnityInstance(canvas, config, (progress) => {
+      progressBarFull.style.width = (progress * 100) + "%";
+    }).then((unityInstance) => {
+      loadingCover.style.display = "none";
+      fullscreenButton.style.display = "";
+      fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
+    }).catch((message) => {
+      alert(message);
+    });
+  };
+
+  document.body.appendChild(script);
+</script>
+
+</body>
 </html>
